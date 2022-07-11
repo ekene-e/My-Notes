@@ -1,1 +1,244 @@
 % \begin{document}
+
+\documentclass{beamer}
+
+
+\usetheme{CambridgeUS}
+\useoutertheme{miniframes}
+
+
+\usepackage{zkp_talk_3}
+
+\title[ZKP and Crypto Group, Summer 2022]{Knowledge and Interactive Proofs}
+\author[Ekene, SEAS '25] {Ekene Ezeunala}
+
+
+\date{July 3rd, 2022}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}
+\fontsize{10pt}{9}\selectfont
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}{One-Way Functions}
+\begin{definition}[One-Way Functions]
+A function $f:\{0,1\}^* \rightarrow \{0,1\}^*$ is called \textit{one-way} if the following two conditions hold:
+\begin{itemize}
+    \item \textit{easy to evaluate}: There exists a polynomial-time algorithm $A$ such that $A(x) = f(x)$ for every $x \in \{0, 1\}^*$.
+    \item \textit{hard to invert}: For every family of polynomial size circuits $\{C_n\}$, every polynomial $p$, and all sufficiently large $n$,
+    \[\mathrm{Pr}[C_n(f(x)) \in f^{-1}(f(x))] < \dfrac{1}{p(n)},\]
+    where the probability is taken uniformly over all the possible choices of $x \in \{0, 1\}^n$.
+\end{itemize}
+\end{definition}
+\end{frame}
+
+
+\begin{frame}{Computational indistinguishability}
+    \begin{definition}
+    We say that $X = \{X_\alpha\}_{\alpha \in S}$ and $Y = \{Y_\alpha\}_{\alpha \in S}$ are \textit{computationally indistinguishable} if for every family of polynomial-size circuits $\{D_n\}$, every polynomial $p$, all sufficiently large $n$ and every $\alpha \in \{0, 1\}^n \cap S$,
+    \[|\mathrm{Pr}[D_n(X_\alpha) = 1] - \mathrm{Pr}[D_n(Y_\alpha) = 1]| < \dfrac{1}{p(n)}\]where the probabilities are taken over the relevant distribution (i.e., either $X_n$ or $Y_n$).
+    \end{definition}
+\end{frame}
+
+\section{A Theory of Knowledge}
+\begin{frame}{Knowledge}
+\begin{itemize}
+    \item We think of knowledge here as a required enabler---knowledge is only regarded as such when it is necessarily actionable.
+    \item Quantifying the knowledge inherent in a message $m$ $\equiv$ quantifying how much easier it becomes to compute some new function given $m$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Example}
+Suppose, given a one-way function $f$, Alice sends the message $m$ to Bob, where
+\[m \coloneqq \underbrace{\mathrm{the\ preimage}}_{n\ \text{times}}\ \text{of}\ 0.\]
+\begin{itemize}
+    \item $m$ is deterministic and has a short description.
+    \item But Bob may not be able to reproduce this message himself because it is computationally expensive to do so.
+\end{itemize}
+\begin{notion}
+The amount of knowledge conveyed in a message can be quantified by considering the running time and size of a Turing machine that generates the message.
+\end{notion}
+\end{frame}
+
+\begin{frame}{Non-deterministic $m$ and zero knowledge}
+Suppose now that Alice randomly draws her message from a probability distribution.
+\begin{itemize}
+    \item It then suffices to consider the complexity of a Turing machine that similarly samples $m$ from a computationally indistinguishable distribution.
+\end{itemize}
+\begin{notion}
+Alice conveys zero knowledge to Bob if Bob can sample from a distribution of messages that is computationally indistinguishable from the distribution of messages that Alice would send.
+\end{notion}
+\end{frame}
+
+\section{Encryption}
+\begin{frame}{Knowledge and Encryption}
+\vspace{-7pt}
+\begin{definition}[Security, informal]
+An encryption scheme is \textit{secure} if the encrypted message doesn't allow an eavesdropper to compute any new (effectively computable) function about the plaintext message wrt to what she would have computed without the encrypted message.
+\end{definition}
+\begin{definition}[Zero-Knowledge Encryption]
+A private-key encryption scheme $(\mathrm{Gen}, \mathrm{Enc}, \mathrm{Dec})$ is a \textit{zero-knowledge encryption scheme} if there exists a probabilistic polynomial time (ppt) simulator algorithm $S$ such that $\forall$ non-uniform ppt $D$, $\exists$ a negligible function $\epsilon(n)$ such that $\forall m \in \{0, 1\}^n$,  $D$ distinguishes the following distributions with probability at most $\epsilon(n)$:
+\begin{itemize}
+    \item $\{k \leftarrow \mathrm{Gen}(1^n) : \mathrm{Enc}_k(m)\}$
+    \item $\{S(1^n)\}$.
+\end{itemize}
+\end{definition}
+\end{frame}
+
+\begin{frame}{Security of encryption schemes}
+    \begin{theorem}
+    Let $(\mathrm{Gen}, \mathrm{Enc}, \mathrm{Dec})$ be an encryption scheme such that $\mathrm{Gen}, \mathrm{Enc}$ are both p.p.t, and there exists a polynomial-time machine $M$ such that for every $n$, $M(n)$ outputs a message in $\{0, 1\}^n$. Then $(\mathrm{Gen}, \mathrm{Enc}, \mathrm{Dec})$ is secure iff it is zero-knowledge.
+    \end{theorem}
+\end{frame}
+
+\begin{frame}{Proof outline}
+    \begin{proof}[Security implies ZP]
+    If we could extract knowledge from the encrypted message, then we'd be able to distinguish between encryptions of two different messages $m$ and $m^\prime$. Suppose $\exists$ simulator $S(1^n)$: pick $m \in \{0, 1\}^n$, $k \leftarrow \mathrm{Gen}(1^n)$, $c \leftarrow \mathrm{Enc}_k(m)$, and output $c$. 
+    
+    Assume $\exists$ n.u. p.p.t. distinguisher $D$ and polynomial $p(n)$ such that for $\infty$ n, $\exists m_n^\prime$ such that $D$ distinguishes $\{k \leftarrow \mathrm{Gen}(1^n) : \mathrm{Enc}_k(m_n)\}$ and $\{S(1^n)\}$ with probability $p(n)$. As $$\{S(1^n)\} = \{k \leftarrow \mathrm{Gen}(1^n); m_n^\prime \leftarrow M(1^n) : \mathrm{Enc}_k(m^\prime_n)\},$$ such $m_n$ and $m^\prime_n$ exist; this contradicts the security of $(\mathrm{Gen}, \mathrm{Enc}, \mathrm{Dec})$.
+    \end{proof}
+\end{frame}
+
+\begin{frame}
+\begin{proof}[ZP implies security]
+    Suppose $(\mathrm{Gen}, \mathrm{Enc}, \mathrm{Dec})$ is zero-knowledge, but $\exists$ a n.u. p.p.t. distinguisher $D$ and a polynomial $p(n)$ such that for $\infty$ n, $\exists$ $m_n^1$ and $m_n^2$ such that $D$ distinguishes
+    \begin{itemize}
+        \item $H_n^1 = \{k \leftarrow \mathrm{Gen}(1^n): \mathrm{Enc}_k(m_n^1)\}$
+        \item $H_n^2 = \{k \leftarrow \mathrm{Gen}(1^n): \mathrm{Enc}_k(m_n^2)\}$
+    \end{itemize}
+    with probability $p(n)$. Define the hybrid dist. $H_n^3 = \{S(1^n)\}.$
+    
+    By the hybrid lemma, $D$ distinguishes between the pairwise adjacent distributions with probability $\dfrac{1}{2p(n)}$ for infinitely many $n$; this is a contradiction.
+\end{proof}
+\end{frame}
+
+\section{Interactive Proofs}
+\begin{frame}{Motivation}
+% [<+(1)->]
+    \begin{itemize}[<+->]
+        \item Why proofs? To convince other people something is true.
+        \item Interactive proofs---randomized and dynamic
+        \begin{itemize}
+            \item prover: has unlimited computational ability; verifier: only operates in PPT
+            \item multi-round randomized protocol
+            \item allow the prover to convince the verifier of the validity of a true assertion
+            \item prevent any malicious prover strategy from fooling the verifier
+        \end{itemize}
+        \item ``Informal" idea of the interaction:
+        \vspace{-6pt}
+        \hspace{-9pt}{$$\text{``Tricky" questions + ``Convincing" responses} \implies \text{Valid statement}$$}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Illustration}
+\begin{definition}
+Two undirected graphs $G$ and $H$ are isomorphic if they are identical except for a permutation of the nodes.
+\end{definition}
+\begin{figure}
+    \centering
+    \includegraphics[width = 8cm, height = 3.5cm]{petersen.png}
+\end{figure}
+\begin{p}[$\mathrm{ISO}$]
+Given two graphs $G$ and $H$, are they isomorphic?
+\end{p}
+\end{frame}
+
+\begin{frame}{Complexity}
+    \begin{itemize}
+        \item $\mathrm{ISO} \in \mathrm{NP}$?---yes
+        \item $\mathrm{ISO} \in \mathrm{P}$?---unknown
+        \item $\mathrm{ISO} \in \mathrm{NP\textendash complete}$?---unknown
+        \item $\overline{\mathrm{ISO}} \in \mathrm{NP}$?---unknown
+        \begin{itemize}
+            \item That is, given two graphs, the question of whether they are not isomorphic is not known to be in $\mathrm{NP}$.
+        \end{itemize}
+    \end{itemize}
+    \begin{remarks}
+    \begin{enumerate}
+        \item $\mathrm{ISO} \in \mathrm{NP}$, so a prover can convince a poly-time verifier that $G$ and $H$ are isomorphic (if true).
+        \item Regardless of $\overline{\mathrm{ISO}} \in \mathrm{NP}$, a prover can still convince a verifier that $G$ and $H$ are \textit{not} isomorphic (if true), provided the prover and the (probabilistic) verifier can interact with each other.
+    \end{enumerate}
+    \end{remarks}
+\end{frame}
+
+\begin{frame}{$\mathcal{IP}$---Informal Model}
+\begin{itemize}[<+->]
+    \item Imagine Victor wants to show that two graphs are not isomorphic; to solve graph non-isomorphism $\overline{\mathrm{ISO}}$.
+    \item However, Victor only exists in probabilistic polynomial time.
+    \item So he enlists the help of Patty and Peggy, both of whom have unlimited computational ability, to do this.
+    \item Patty and Peggy have other things going on, so they're not the most devoted to solving this problem. Victor knows this, so he doesn't trust that they indeed solved it.
+    \item If $G$ and $H$ are isomorphic, then Patty and Peggy can immediately present this isomorphism and convince Victor.
+    \item But what if they weren't isomorphic?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Scheme for $\mathcal{IP}$ Verifier---Informal Model}
+    \begin{itemize}[<+->]
+        \item Victor randomly \& secretly picks $G$ or $H$, permutes its nodes to get a new graph $K$, and sends $K$ to Patty and Peggy, along with the question, ``Which graph did I permute?"
+        \item $K$ must be isomorphic to $G$ or $H$.
+        \item If they were non-isomorphic in the first place, then picking out $G$ or $H$ is trivial.
+        \item If they were, then it is essentially reduced to a coin flip between $G$ and $H$.
+        \item If this process is repeated a large number of times, then the probability of malicious success is disastrous.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{$\mathcal{IP}$---Formal Model}
+\vspace{-7pt}
+    \begin{definition}[Interactive Proof]
+    A pair of interactive machines $(P, V)$ is an interactive proof system for a language $L$ if $V$ is a ppt machine and the following properties hold:
+    \begin{itemize}
+        \item (\textit{Completeness.}) For every $x \in L$, there exists a witness string $y \in \{0, 1\}^*$ such that for every auxiliary string $z$:
+        \[\mathrm{Pr}[\mathrm{out}_V[P(x, y) \leftrightarrow V(x, z) = 1] = 1.\]
+        \item (\textit{Soundness.}) There exists some negligible function $\epsilon$ such that for all $x \notin L$ and for all prover algorithms $P^*$, and all auxiliary strings $z \in \{0, 1\}^*$,
+        \[\mathrm{Pr}[\mathrm{out}_V[P^*(x) \leftrightarrow V(x, z)] = 0] > 1 - \epsilon(|x|).\]
+    \end{itemize}
+    The class of problems having interactive proof systems is denoted $\mathcal{IP}$.
+    \end{definition}
+\end{frame}
+
+
+\begin{frame}{Check-In}
+    Suppose we change the model to allow the prover (Patty and Peggy) access to the verifier's (Victor's) random choices. Consider the $\mathcal{IP}$ protocol as described above. What language does it describe?
+    \begin{itemize}
+        \item $\{\langle G, H \rangle \mid G \neq H\}$
+        \item $\{\langle G, H \rangle \mid G \text{ and } H \text{ are not isomorphic}\}$
+        \item $\{\langle G, H \rangle \mid G \text{ and } H \text{ are any two graphs}\}$
+        \item $\emptyset$
+    \end{itemize}
+\end{frame}
+
+
+% \begin{frame}{Schwartz-Zippel Lemma}
+% \begin{terminology}
+% The degree of a term of an $m$-variate polynomial $g$, written $\mathrm{deg}(\bullet)$, is the sum of the exponents of the variables in the term. The total degree of $g$ is the maximum degree of any term of $g$.
+% \end{terminology}
+% \textbf{Example}: Choose $g(x_1, x_2) = 999x_1x_2^2x_3 + 12x_1^6 + 3$. Then $\mathrm{deg}(999x_1x_2^2x_3) = 3$, $\mathrm{deg}(12x_1^6) = 6$, and $\mathrm{deg}(3) = 0$.
+% \begin{lemma}[Schwartz-Zippel]
+% Let $\mathbb{F}$ be a field, and let $g : \mathbb{F}^m \to \mathbb{F}$ be a nonzero $m$-variate polynomial of total degree at most $d$. Then on any finite set $S \subseteq \mathbb{F},$
+% \[\underset{x \leftarrow S^m}{\mathrm{Pr}}[g(x) = 0] \leq \dfrac{d}{|S|}\]
+% \end{lemma}
+% \end{frame}
+
+
+\section{References}
+\begin{frame}{References}
+    \begin{enumerate}
+        \item Knospe, Heiko. \textit{A Course in Cryptography.} Vol. 40. American Mathematical Soc., 2019.
+        \item Goldreich, Oded. "A Short Tutorial of Zero-Knowledge." (2013): 28-60.
+        \item Thaler, Justin. "Proofs, arguments, and zero-knowledge." (2020).
+    \end{enumerate}
+\end{frame}
+\begin{frame}{}
+     \begin{theorem}
+     Ad-hoc anti-zero-knowledge protocols have been developed by most customer helpline services.
+     \end{theorem}
+     \begin{proof}
+     THIS IS TRIVIAL, IMMEDIATELY OBVIOUS, AND IS LEFT AS AN EXERCISE FOR THE READER!!!
+     \end{proof}
+\end{frame}
+\end{document}
